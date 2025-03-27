@@ -1,11 +1,10 @@
-
-name: aseprite
+name: Build Aseprite
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to build, leave empty for latest"
+        description: "Version to build, leave empty for latest stable"
         required: false
 
 jobs:
@@ -16,16 +15,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set Aseprite Version
+        id: version
+        run: |
+          if "%VERSION%"=="" (
+            echo No version specified, using the latest stable version.
+            set ASEPRITE_VERSION=latest-stable
+          ) else (
+            echo Using specified version: %VERSION%
+            set ASEPRITE_VERSION=%VERSION%
+          )
+        shell: cmd
+
       - name: Build
         id: build
         shell: cmd
         run: call build.cmd
         env:
-          ASEPRITE_VERSION: ${{ github.event.inputs.version }}
+          ASEPRITE_VERSION: ${{ env.ASEPRITE_VERSION }}
 
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
-          name: aseprite-${{ steps.build.outputs.ASEPRITE_VERSION }}
+          name: aseprite-${{ env.ASEPRITE_VERSION }}
           path: github
           if-no-files-found: error
